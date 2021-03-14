@@ -27,6 +27,7 @@ type Protocol struct {
 	ImportWithdraws RouteChangeCount
 	ExportUpdates   RouteChangeCount
 	ExportWithdraws RouteChangeCount
+	VRF             string
 }
 
 type RouteChangeCount struct {

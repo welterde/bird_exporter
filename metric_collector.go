@@ -15,12 +15,12 @@ type MetricCollector struct {
 	newFormat        bool
 }
 
-func NewMetricCollector(newFormat bool, enabledProtocols int, descriptionLabels bool) *MetricCollector {
+func NewMetricCollector(newFormat bool, enabledProtocols int, descriptionLabels bool, enableVRF bool, defaultVRF string) *MetricCollector {
 	c := getClient()
 	var e map[int][]metrics.MetricExporter
 
 	if newFormat {
-		e = exportersForDefault(c, descriptionLabels)
+		e = exportersForDefault(c, descriptionLabels, enableVRF, defaultVRF)
 	} else {
 		e = exportersForLegacy(c)
 	}
@@ -57,8 +57,8 @@ func exportersForLegacy(c *client.BirdClient) map[int][]metrics.MetricExporter {
 	}
 }
 
-func exportersForDefault(c *client.BirdClient, descriptionLabels bool) map[int][]metrics.MetricExporter {
-	l := metrics.NewDefaultLabelStrategy(descriptionLabels)
+func exportersForDefault(c *client.BirdClient, descriptionLabels bool, enableVRF bool, defaultVRF string) map[int][]metrics.MetricExporter {
+	l := metrics.NewDefaultLabelStrategy(descriptionLabels, enableVRF, defaultVRF)
 	e := metrics.NewGenericProtocolMetricExporter("bird_protocol", true, l)
 
 	return map[int][]metrics.MetricExporter{

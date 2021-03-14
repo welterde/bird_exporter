@@ -26,6 +26,9 @@ var (
 	enableKernel  = flag.Bool("proto.kernel", true, "Enables metrics for protocol Kernel")
 	enableStatic  = flag.Bool("proto.static", true, "Enables metrics for protocol Static")
 	enableDirect  = flag.Bool("proto.direct", true, "Enables metrics for protocol Direct")
+	enableVRF     = flag.Bool("vrf.enable", false, "Enables emission of VRF labels")
+	defaultVRF    = flag.String("vrf.default", "", "What should we name the default VRF")
+	
 	// pre bird 2.0
 	bird6Socket       = flag.String("bird.socket6", "/var/run/bird6.ctl", "Socket to communicate with bird6 routing daemon (not compatible with -bird.v2)")
 	birdEnabled       = flag.Bool("bird.ipv4", true, "Get protocols from bird (not compatible with -bird.v2)")
@@ -86,7 +89,7 @@ func startServer() {
 func handleMetricsRequest(w http.ResponseWriter, r *http.Request) {
 	reg := prometheus.NewRegistry()
 	p := enabledProtocols()
-	c := NewMetricCollector(*newFormat, p, *descriptionLabels)
+	c := NewMetricCollector(*newFormat, p, *descriptionLabels, *enableVRF, *defaultVRF)
 	reg.MustRegister(c)
 
 	promhttp.HandlerFor(reg, promhttp.HandlerOpts{

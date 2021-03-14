@@ -9,11 +9,15 @@ import (
 // DefaultLabelStrategy defines the labels to add to an metric and its data retrieval method
 type DefaultLabelStrategy struct {
 	descriptionLabels bool
+	defaultVRF string
+	enableVRF bool
 }
 
-func NewDefaultLabelStrategy(descriptionLabels bool) *DefaultLabelStrategy {
+func NewDefaultLabelStrategy(descriptionLabels bool, enableVRF bool, defaultVRF string) *DefaultLabelStrategy {
 	return &DefaultLabelStrategy{
 		descriptionLabels: descriptionLabels,
+		defaultVRF: defaultVRF,
+		enableVRF: enableVRF,
 	}
 }
 
@@ -22,6 +26,9 @@ func (d *DefaultLabelStrategy) LabelNames(p *protocol.Protocol) []string {
 	res := []string{"name", "proto", "ip_version", "import_filter", "export_filter"}
 	if d.descriptionLabels && p.Description != "" {
 		res = append(res, labelKeysFromDescription(p.Description)...)
+	}
+	if d.enableVRF {
+		res = append(res, "vrf")
 	}
 
 	return res
@@ -32,6 +39,13 @@ func (d *DefaultLabelStrategy) LabelValues(p *protocol.Protocol) []string {
 	res := []string{p.Name, protoString(p), p.IPVersion, p.ImportFilter, p.ExportFilter}
 	if d.descriptionLabels && p.Description != "" {
 		res = append(res, labelValuesFromDescription(p.Description)...)
+	}
+	if d.enableVRF {
+		if p.VRF != "" {
+			res = append(res, p.VRF)
+		} else {
+			res = append(res, d.defaultVRF)
+		}
 	}
 
 	return res

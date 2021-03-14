@@ -21,6 +21,7 @@ var (
 	routeChangeRegex *regexp.Regexp
 	filterRegex      *regexp.Regexp
 	channelRegex     *regexp.Regexp
+	vrfRegex         *regexp.Regexp
 )
 
 type context struct {
@@ -39,6 +40,7 @@ func init() {
 	routeChangeRegex = regexp.MustCompile(`(Import|Export) (updates|withdraws):\s+(\d+|---)\s+(\d+|---)\s+(\d+|---)\s+(\d+|---)\s+(\d+|---)\s*`)
 	filterRegex = regexp.MustCompile(`(Input|Output) filter:\s+(.*)`)
 	channelRegex = regexp.MustCompile(`Channel ipv(4|6)`)
+	vrfRegex = regexp.MustCompile(`VRF:\s+(.*)`)
 }
 
 // ParseProtocols parses bird output and returns protocol.Protocol structs
@@ -56,6 +58,7 @@ func ParseProtocols(data []byte, ipVersion string) []*protocol.Protocol {
 		parseLineForRoutes,
 		parseLineForRouteChanges,
 		parseLineForFilterName,
+		parseLineForVRF,
 	}
 
 	for scanner.Scan() {
@@ -209,6 +212,7 @@ func parseLineForChannel(c *context) {
 			Up:        c.current.Up,
 			Uptime:    c.current.Uptime,
 			IPVersion: channel[1],
+			VRF:       c.current.VRF,
 		}
 		c.protocols = append(c.protocols, c.current)
 	}
@@ -299,6 +303,21 @@ func parseLineForFilterName(c *context) {
 	} else {
 		c.current.ExportFilter = match[2]
 	}
+
+	c.handled = true
+}
+
+func parseLineForVRF(c *context) {
+	if c.current == nil {
+		return
+	}
+
+	match := vrfRegex.FindStringSubmatch(c.line)
+	if match == nil {
+		return
+	}
+
+	c.current.VRF = match[1]
 
 	c.handled = true
 }
